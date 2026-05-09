@@ -64,50 +64,50 @@
 <form th:method="POST" th:action="@{/admin}" th:object="${user}">
 
     <div class="mb-3">
-    <label for="username">Никнейм:</label>
+    <label for="username">Никнейм</label>
     <input type="text" class="form-control" th:field="*{username}" id="username" required/>
     <div class="error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">Ошибка никнейма</div>
     </div>
 
     <div class="mb-3">
-    <label for="password">Пароль:</label>
+    <label for="password">Пароль</label>
     <input type="password" class="form-control" th:field="*{password}" id="password" required/>
     <div class="error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Ошибка пароля</div>
     </div>
 
     <div class="mb-3">
-    <label for="roles">Роль:</label>
-    <select class="form-select" th:field="*{roles}" id="roles" multiple size="2" required>
-        <option th:each="role : ${roles}"
-                th:value="${role.id}"
-                th:text="${role.name.replace('ROLE_','')}">Название Роли</option>
-    </select>
-    <div class="error" th:if="${#fields.hasErrors('roles')}" th:errors="*{roles}">Ошибка роли</div>
-    </div>
-
-    <div class="mb-3">
-    <label for="name">Имя:</label>
+    <label for="name">Имя</label>
     <input type="text" class="form-control" th:field="*{name}" id="name" required/>
     <div class="error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Ошибка имени</div>
     </div>
 
     <div class="mb-3">
-    <label for="lastName">Фамилия:</label>
+    <label for="lastName">Фамилия</label>
     <input type="text" class="form-control" th:field="*{lastName}" id="lastName" required/>
     <div class="error" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}">Ошибка фамилии</div>
     </div>
 
     <div class="mb-3">
-    <label for="age">Возраст:</label>
+    <label for="age">Возраст</label>
     <input type="number" class="form-control" th:field="*{age}" id="age"
            min="1" max="100" step="1" required/>
     <div class="error" th:if="${#fields.hasErrors('age')}" th:errors="*{age}">Ошибка возраста</div>
     </div>
 
     <div class="mb-3">
-    <label for="email">Email:</label>
+    <label for="email">Email</label>
     <input type="email" class="form-control" th:field="*{email}" id="email" required/>
     <div class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Ошибка email</div>
+    </div>
+
+    <div class="mb-3">
+        <label for="roles">Роль</label>
+        <select class="form-select" th:field="*{roles}" id="roles" multiple size="2" required>
+            <option th:each="role : ${roles}"
+                    th:value="${role.id}"
+                    th:text="${role.name.replace('ROLE_','')}">Название Роли</option>
+        </select>
+        <div class="error" th:if="${#fields.hasErrors('roles')}" th:errors="*{roles}">Ошибка роли</div>
     </div>
 
     <button type="submit" class="btn btn-success btn-lg mt-3 px-4">Создать нового пользователя</button>
