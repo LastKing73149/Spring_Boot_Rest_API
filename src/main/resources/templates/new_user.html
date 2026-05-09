@@ -3,68 +3,120 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>New User</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        body {background-color: #f8f9fa; }
+        .sidebar {min-height: 100vh; background-color: white; padding-top: 20px; border-right: 1px solid #dee2e6;}
+        .nav-pills .nav-link { border-radius: 0.25rem; }
+        .nav-pills .nav-link.active { background-color: #007bff; }
+        .form-container { max-width: 380px; margin: 0 auto; text-align: center; font-weight: bold;}
+        .form-container label {font-weight: bold; margin-top: 5px; display: block; }
         .error {color: red; font-size: 0.8em; margin-bottom: 10px;}
-        label{display: block; margin-top: 10px; font-weight: bold;}
-        input {padding: 5px; width: 250px;}
-        .btn {margin-top: 20px; padding: 10px 20px; cursor: pointer; background: #2196f3; color: white; border: none; border-radius: 4px; }
-        .btn:hover {background: #1976d2;}
     </style>
 </head>
 <body>
-<div style="background: #f4f4f4; padding: 10px; margin-bottom: 20px;">
-    Вы вошли как: <b sec:authentication="name">Имя</b> |
+<nav class="navbar navbar-dark bg-dark shadow-sm">
+    <div class="container-fluid">
+        <span class="navbar-brand">
+                <strong> Вы вошли как: <b sec:authentication="name">Имя</b> |</strong>
     Роли: <span th:each="authority : ${#authentication.getAuthorities()}">
-         <i th:text="${authority.getAuthority().replace('ROLE_', '').replace('FACTOR_PASSWORD', '') + ' '}"></i>
+         <i th:text="${'[' + authority.getAuthority().replace('ROLE_', '').replace('FACTOR_PASSWORD', '') + '] '}"></i>
      </span>
-</div>
-<h2>Добавить нового пользователя</h2>
+        </span>
+        <form th:action="@{/logout}" method="post" class="d-flex">
+            <button type="submit" class="btn btn-outline-danger text-decoration-none">Выйти из системы</button>
+        </form>
+    </div>
+</nav>
 
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2 px-0 sidebar">
+            <ul class="nav nav-pills flex-column px-3">
+                <li class="nav-item">
+                    <a class="nav-link active text-center" th:href="@{/admin}">Admin</a>
+                </li>
+                <li class="nav-item mt-1">
+                    <a class="nav-link text-center" th:href="@{/user}">User</a>
+                </li>
+            </ul>
+        </div>
+
+        <main class="col-md-10 px-4 py-3">
+            <h1 class="mb-3">Панель Администратора</h1>
+
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/admin}">Все пользователи</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" sec:authorize="hasRole('ADMIN')" th:href="@{/admin/new}">Новый пользователь</a>
+                </li>
+            </ul>
+            <div class="card border-top-0 rounded-0">
+                <div class="card-header bg-light">
+                <h5 class="mb-0">Добавить нового пользователя</h5>
+            </div>
+                <div class="card-body">
+                    <div class="form-container">
 <form th:method="POST" th:action="@{/admin}" th:object="${user}">
+
+    <div class="mb-3">
     <label for="username">Никнейм:</label>
-    <input type="text" th:field="*{username}" id="username" required/>
+    <input type="text" class="form-control" th:field="*{username}" id="username" required/>
     <div class="error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">Ошибка никнейма</div>
-    <br/><br/>
+    </div>
 
+    <div class="mb-3">
     <label for="password">Пароль:</label>
-    <input type="password" th:field="*{password}" id="password" required/>
+    <input type="password" class="form-control" th:field="*{password}" id="password" required/>
     <div class="error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Ошибка пароля</div>
-    <br/><br/>
+    </div>
 
+    <div class="mb-3">
     <label for="roles">Роль:</label>
-    <select th:field="*{roles}" id="roles" name='roles' multiple style="padding: 5px; width: 262px">
+    <select class="form-select" th:field="*{roles}" id="roles" multiple size="2" required>
         <option th:each="role : ${roles}"
                 th:value="${role.id}"
                 th:text="${role.name.replace('ROLE_','')}">Название Роли</option>
     </select>
     <div class="error" th:if="${#fields.hasErrors('roles')}" th:errors="*{roles}">Ошибка роли</div>
-    <br/><br/>
+    </div>
 
+    <div class="mb-3">
     <label for="name">Имя:</label>
-    <input type="text" th:field="*{name}" id="name" required/>
+    <input type="text" class="form-control" th:field="*{name}" id="name" required/>
     <div class="error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Ошибка имени</div>
-    <br/><br/>
+    </div>
 
+    <div class="mb-3">
     <label for="lastName">Фамилия:</label>
-    <input type="text" th:field="*{lastName}" id="lastName" required/>
+    <input type="text" class="form-control" th:field="*{lastName}" id="lastName" required/>
     <div class="error" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}">Ошибка фамилии</div>
-    <br/><br/>
+    </div>
 
+    <div class="mb-3">
     <label for="age">Возраст:</label>
-    <input type="number" th:field="*{age}" id="age"
+    <input type="number" class="form-control" th:field="*{age}" id="age"
            min="1" max="100" step="1" required/>
     <div class="error" th:if="${#fields.hasErrors('age')}" th:errors="*{age}">Ошибка возраста</div>
-    <br/><br/>
+    </div>
 
+    <div class="mb-3">
     <label for="email">Email:</label>
-    <input type="email" th:field="*{email}" id="email" required/>
+    <input type="email" class="form-control" th:field="*{email}" id="email" required/>
     <div class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Ошибка email</div>
-    <br/><br/>
+    </div>
 
-    <button type="submit" class="btn">Создать нового пользователя</button>
-</form>
-<br/>
-<a th:href="@{/admin}">Назад к списку</a>
+    <button type="submit" class="btn btn-success btn-lg mt-3 px-4">Создать нового пользователя</button>
+                                </form>
+                          </div>
+                    </div>
+              </div>
+        </main>
+    </div>
+</div>
 </body>
 </html>

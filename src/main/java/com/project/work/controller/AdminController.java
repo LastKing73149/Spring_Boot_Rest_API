@@ -32,6 +32,7 @@ public class AdminController {
     @GetMapping
     public String getAllUsers(Model model){
         model.addAttribute("users", userService.getAllUsers());
+        model.addAttribute("roles", roleService.getAllRoles());
         return "index";
     }
 
@@ -41,6 +42,7 @@ public class AdminController {
             bindingResult.rejectValue("username","error.user","Пользователь с таким никнеймом уже существует!");
         }
         if (bindingResult.hasErrors()) {
+            model.addAttribute("users", userService.getAllUsers());
             model.addAttribute("roles", roleService.getAllRoles());
             return "new_user";
         }
@@ -61,7 +63,7 @@ public class AdminController {
         if(bindingResult.hasErrors()) {
             model.addAttribute("roles", roleService.getAllRoles());
             bindingResult.getAllErrors().forEach(error -> System.out.println("LOG ERROR: " + error.toString()));
-            return "edit_user";
+            return "index";
         }
         userService.updateUser(id, user);
         return "redirect:/admin";

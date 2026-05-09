@@ -1,28 +1,68 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns:text-decoration="http://www.w3.org/1999/xhtml"
-      xmlns:border-radius="http://www.w3.org/1999/xhtml">
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns:как="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <title>User Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Панель Администратора</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <style>
-        table {width: 70%; border-collapse: collapse; margin-top: 20px;}
-        th, td {padding: 8px; text-align: left; border: 1px solid #ccc; }
-        th {background-color: #f2f2f2;}
-        .btn-edit { color: #2196f3; text-decoration: none; margin-right: 10px; }
-        .btn-delete { background: none; border: none; color: red; cursor: pointer; padding: 0; font: inherit; }
-        .btn-delete:hover { text-decoration: underline; }
+        body {background-color: #f8f9fa}
+        .sidebar {min-height: 100vh; background-color: white; padding-top: 20px;}
+        .nav-pills .nav-link {border-radius: 0.25rem; }
+        .nav-pills .nav-link.active {background-color: #007bff; }
+
+        .btn-edit {background-color: #17a2b8; color: white; border: none; }
+        .btn-edit:hover {background-color: #138496; color: white; }
+        .navbar-text-white {color: rgba(255,255,255,0.8);}
     </style>
 </head>
 <body>
-<div style="background: #f4f4f4; padding: 10px; margin-bottom: 20px;">
-    Вы вошли как: <b sec:authentication="name">Имя</b> |
+<nav class="navbar navbar-dark bg-dark shadow-sm">
+    <div class="container-fluid">
+        <span class="navbar-brand">
+                <strong> Вы вошли как: <b sec:authentication="name">Имя</b> |</strong>
     Роли: <span th:each="authority : ${#authentication.getAuthorities()}">
          <i th:text="${authority.getAuthority().replace('ROLE_', '').replace('FACTOR_PASSWORD', '') + ' '}"></i>
      </span>
+        </span>
+        <form th:action="@{/logout}" method="post" class="d-flex">
+            <button type="submit" class="btn btn-outline-danger text-decoration-none">Выйти из системы</button>
+        </form>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2 px-0 sidebar">
+            <ul class="nav nav-pills flex-column px-3">
+                <li class="nav-item">
+                    <a class="nav-link active text-center" th:href="@{/admin}">Admin</a>
+                </li>
+                <li class="nav-item mt-1">
+                    <a class="nav-link text-center" th:href="@{/user}">User</a>
+                </li>
+            </ul>
 </div>
-<h2> Список пользователей</h2>
-<table>
+
+        <main class="col-md-10 px-4 py-3">
+            <h1 class="mb-3">Панель Администратора</h1>
+
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">Все пользователи</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" sec:authorize="hasRole('ADMIN')" th:href="@{/admin/new}">Новый пользователь</a>
+                </li>
+            </ul>
+<div class="card border-top-0 rounded-0">
+    <div class="card-header bg-light">
+<h5 class="mb-0">Список пользователей </h5>
+    </div>
+    <div class="card-body">
+<table class="table table-striped align-middle">
     <thead>
     <tr>
         <th>ID</th>
@@ -30,7 +70,9 @@
         <th>Фамилия</th>
         <th>Возраст</th>
         <th>Email</th>
-        <th>Роль</th> <th>Действия</th>
+        <th>Роль</th>
+        <th>Редактирование</th>
+        <th>Удаление</th>
     </tr>
     </thead>
     <tbody>
@@ -46,26 +88,132 @@
             </span>
         </td>
         <td>
-            <a sec:authorize="hasRole('ADMIN')" class="btn-edit" th:href="@{/admin/{id}/edit(id=${user.id})}">Изменить</a>
-            <form sec:authorize="hasRole('ADMIN')" th:method="DELETE" th:action="@{/admin/{id}(id=${user.id})}" style="display: inline">
-                <button type="submit" class="btn-delete"
-                        onclick="return confirm('Вы уверены в этом?')">Удалить</button>
-            </form>
+            <button type="button" class="btn btn-info text-white btn-sm"
+                    data-bs-toggle="modal"
+                    th:data-bs-target="${'#editModal' + user.id}"
+                    sec:authorize="hasRole('ADMIN')"
+                    th:href="@{/admin/{id}/edit(id=${user.id})}">Изменить</button>
+            <div class="modal fade" th:id="${'editModal' + user.id}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Редактирование пользователя</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form th:method="PATCH" th:action="@{/admin/{id}(id=${user.id})}" th:object="${user}">
+                            <div class="modal-body d-flex justify-content-center">
+                                <div class="col-8 text-center">
+
+                                <label class="form-label fw-bold">ID</label>
+                                <input type="text" name="id" th:value="${user.id}" class="form-control bg-light" readonly/>
+
+                                <label class="form-label fw-bold">Никнейм</label>
+                                <input type="text" name="username" th:value="${user.username}" class="form-control">
+
+                                <label class="form-label fw-bold">Пароль</label>
+                                <input type="password" name="password" class="form-control"/>
+                                <label class="form-label fw-bold">(оставьте пустым, если не хотите менять)</label>
+
+                                <label class="form-label fw-bold">Имя</label>
+                                <input type="text" name="name" th:value="${user.name}" class="form-control"/>
+
+                                <label class="form-label fw-bold">Фамилия</label>
+                                <input type="text" name="lastName" th:value="${user.lastName}" class="form-control"/>
+
+                                <label class="form-label fw-bold">Возраст</label>
+                                <input type="number" name="age" th:value="${user.age}" class="form-control"/>
+
+                                <label class="form-label fw-bold">Почта</label>
+                                <input type="email" name="email" th:value="${user.email}" class="form-control"/>
+
+                                <label class="form-label fw-bold">Роль</label>
+                                <select name="roles" class="form-select" multiple size="2">
+                                    <option th:each="role : ${roles}"
+                                            th:value="${role.id}"
+                                            th:text="${role.name.replace('ROLE_', '')}"
+                                            th:selected="${user.roles.contains(role)}">
+
+                                    </option>
+                                </select>
+                            </div>
+                    </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                                <button type="submit" class="btn btn-primary">Редактировать</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            </td>
+        <td>
+                <button type="button" class="btn btn-danger btn-sm px-3"
+                        data-bs-toggle="modal"
+                        th:data-bs-target="${'#deleteModal' + user.id}"
+                        sec:authorize="hasRole('ADMIN')">
+                    Удалить
+                </button>
+
+            <div class="modal fade" th:id="${'deleteModal' + user.id}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Удалить пользователя</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form th:method="DELETE" th:action="@{/admin/{id}(id=${user.id})}">
+                            <div class="modal-body d-flex justify-content-center">
+                                <div class="col-8 text-center">
+
+                                    <label class="form-label fw-bold">ID</label>
+                                    <input type="text" name="id" th:value="${user.id}" class="form-control bg-light bg-light" disabled/>
+
+                                    <label class="form-label fw-bold">Никнейм</label>
+                                    <input type="text" name="username" th:value="${user.username}" class="form-control bg-light" disabled>
+
+                                    <label class="form-label fw-bold">Пароль</label>
+                                    <input type="password" name="password" class="form-control bg-light" disabled/>
+                                    <label class="form-label fw-bold">(оставьте пустым, если не хотите менять)</label>
+
+                                    <label class="form-label fw-bold">Имя</label>
+                                    <input type="text" name="name" th:value="${user.name}" class="form-control bg-light" disabled/>
+
+                                    <label class="form-label fw-bold">Фамилия</label>
+                                    <input type="text" name="lastName" th:value="${user.lastName}" class="form-control bg-light" disabled/>
+
+                                    <label class="form-label fw-bold">Возраст</label>
+                                    <input type="number" name="age" th:value="${user.age}" class="form-control bg-light" disabled/>
+
+                                    <label class="form-label fw-bold">Почта</label>
+                                    <input type="email" name="email" th:value="${user.email}" class="form-control bg-light" disabled/>
+
+                                    <label class="form-label fw-bold">Роль</label>
+                                    <select name="roles" class="form-select" multiple size="2" disabled>
+                                        <option th:each="role : ${user.roles}"
+                                                th:text="${role.name.replace('ROLE_', '')}">
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                                <button type="submit" class="btn btn-danger">Удалить</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
             <span sec:authorize="hasRole('USER') and !hasRole('ADMIN')" style="color: gray;">У вас нету достаточных прав</span>
-        </td>
-    </tr>
-    </tbody>
-</table>
-<br/>
-<hr/>
-<a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/new}"
-    style="display: inline-block; padding: 10px; background: #4caf50; color: white; text-decoration: none; border-radius: 4px;">
-    Добавить нового пользователя
-</a>
-
-<form th:action="@{/logout}" method="post">
-    <button type="submit" style="background: none; cursor: pointer;"> Выйти из системы</button>
-</form>
+                                                     </td>
+                                                </tr>
+                                        </tbody>
+                                </table>
+                          </div>
+                    </div>
+            </main>
+      </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
