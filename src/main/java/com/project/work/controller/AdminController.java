@@ -1,4 +1,4 @@
-package com.project.work.controller;
+/*package com.project.work.controller;
 
 import com.project.work.model.User;
 import com.project.work.repository.UserRepository;
@@ -74,4 +74,4 @@ public class AdminController {
         userService.deleteUser(id);
         return "redirect:/admin";
     }
-}
+}*/

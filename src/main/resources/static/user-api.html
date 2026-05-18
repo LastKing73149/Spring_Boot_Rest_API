@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Панель администратора - Rest-API</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        label.form-label {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container-fluid mt-4">
+    <h2>Панель администратора</h2>
+
+<ul class="nav nav-tabs" id="adminTabs" role="tablist">
+    <li class="nav-item">
+        <button class="nav-link active" id="users-table-tab" data-bs-toggle="tab" data-bs-target="#users-table-pane" type="button">Таблица пользователей</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" id="new-user-tab" data-bs-toggle="tab" data-bs-target="#new-user-pane" type="button">Новый пользователь</button>
+    </li>
+</ul>
+
+    <div class="tab-content" id="adminTabsContent">
+        <div class="tab-pane fade show active" id="users-table-pane">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Никнейм</th>
+                    <th>Имя</th>
+                    <th>Фамилия</th>
+                    <th>Возраст</th>
+                    <th>Email</th>
+                    <th>Роль</th>
+                    <th>Редактирование</th>
+                    <th>Удаление</th>
+                </tr>
+                </thead>
+                <tbody id="allUsersTable"></tbody>
+            </table>
+        </div>
+
+<div class="tab-pane fade" id="new-user-pane">
+    <div class="row justify-content-center">
+        <form id="newUserForm" class="col-md-4 text-center">
+            <label class="form-label">Никнейм</label>
+            <input type="text" id="newUsername" class="form-control" required>
+
+            <label class="form-label">Пароль</label>
+            <input type="password" id="newPassword" class="form-control" required>
+
+            <label class="form-label">Имя</label>
+            <input type="text" id="newName" class="form-control">
+
+            <label class="form-label">Фамилия</label>
+            <input type="text" id="newLastName" class="form-control">
+
+            <label class="form-label">Возраст</label>
+            <input type="number" id="newAge" class="form-control">
+
+            <label class="form-label">Почта</label>
+            <input type="email" id="newEmail" class="form-control">
+
+            <label class="form-label">Роль</label>
+            <select id="newRoles" class="form-select" multiple size="2"></select>
+
+            <button type="submit" class="btn btn-success mt-3">Добавить пользователя</button>
+                    </form>
+              </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Удалить пользователя</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body d-flex justify-content-center">
+                <div class="col-8 text-center" id="deleteModalBody">
+
+                <label class="form-label">ID</label>
+                <input type="text" id="delId" class="form-control bg-light" disabled>
+
+                <label class="form-label">Никнейм</label>
+                <input type="text" id="delUsername" class="form-control bg-light" disabled>
+
+                <label class="form-label">Имя</label>
+                <input type="text" id="delName" class="form-control bg-light" disabled>
+
+                <label class="form-label">Фамилия</label>
+                <input type="text" id="delLastName" class="form-control bg-light" disabled>
+
+                <label class="form-label">Почта</label>
+                <input type="email" id="delEmail" class="form-control bg-light" disabled>
+
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            <button type="button" class="btn btn-danger" id="confirmDelete">Удалить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Редактировать пользователя</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body d-flex justify-content-center">
+                <div class="col-8 text-center">
+                    <label class="form-label">ID</label>
+                    <input type=text id="editId" class="form-control bg-light" readonly>
+
+                    <label class="form-label">Никнейм</label>
+                    <input type="text" id="editUsername" class="form-control">
+
+                    <label class="form-label">Пароль</label>
+                    <input type="password" id="editPassword" class="form-control">
+
+                    <label class="form-label">Имя</label>
+                    <input type="text" id="editName" class="form-control">
+
+                    <label class="form-label">Фамилия</label>
+                    <input type="text" id="editLastName" class="form-control">
+
+                    <label class="form-label">Возраст</label>
+                    <input type="number" id="editAge" class="form-control">
+
+                    <label class="form-label">Почта</label>
+                    <input type="email" id="editEmail" class="form-control">
+
+                    <label class="form-label">Роль</label>
+                    <select id="editRoles" class="form-select" multiple size="2"></select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <button type="button" class="btn btn-primary" id="confirmEdit">Обновить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    let url = '/api/admin';
+
+    async function loadRoles() {
+        const response = await fetch('/api/admin/roles');
+        const roles = await response.json();
+        const selectElements = [document.getElementById('editRoles'), document.getElementById('newRoles')];
+
+        selectElements.forEach(select => {
+            if(!select) return;
+            select.innerHTML = '';
+            roles.forEach(role => {
+                let option = document.createElement('option');
+                option.value = role.id;
+                option.text = role.name.replace('ROLE_', '');
+                select.appendChild(option);
+            });
+        });
+    }
+
+    async function showAllUsers() {
+        const table = document.getElementById('allUsersTable');
+        table.innerHTML = '';
+        const response = await fetch(url);
+        const users = await response.json();
+        users.forEach(user => {
+            const roles = user.roles.map(r => r.name.replace('ROLE_', '')).join(' ');
+            let row = `
+                    <tr>
+                    <td>${user.id}</td>
+                    <td>${user.username}</td>
+                    <td>${user.name}</td>
+                    <td>${user.lastName}</td>
+                    <td>${user.age}</td>
+                    <td>${user.email}</td>
+                    <td>${roles}</td>
+                    <td>
+                    <button class = "btn btn-info text-white" onclick="prepareEdit(${user.id})">Редактировать</button>
+                    </td>
+                    <td>
+                    <button class = "btn btn-danger" onclick="prepareDelete(${user.id})">Удалить</button>
+                    </td>
+                    </tr>`;
+                    table.insertAdjacentHTML('beforeend', row);
+                });
+    }
+
+
+    async function prepareEdit(id) {
+        const response = await fetch(url + '/' + id);
+        const user = await response.json();
+
+        document.getElementById('editId').value = user.id;
+        document.getElementById('editUsername').value = user.username || '';
+        document.getElementById('editName').value = user.name || '';
+        document.getElementById('editLastName').value = user.lastName || '';
+        document.getElementById('editAge').value = user.age || '';
+        document.getElementById('editEmail').value = user.email || '';
+        document.getElementById('editPassword').value = '';
+
+        const select = document.getElementById('editRoles');
+        const userRoleIds = user.roles.map(r => r.id);
+
+        Array.from(select.options).forEach(option => {
+            option.selected = userRoleIds.includes(parseInt(option.value));
+        });
+
+        document.getElementById('confirmEdit').onclick = () => confirmEdit(id);
+        new bootstrap.Modal(document.getElementById('editModal')).show();
+    }
+
+    async function confirmEdit(id) {
+        const password = document.getElementById('editPassword').value;
+        const ageValue = document.getElementById('editAge').value;
+        const user = {
+            id: id,
+            username: document.getElementById('editUsername').value,
+            name: document.getElementById('editName').value,
+            lastName: document.getElementById('editLastName').value,
+            age: ageValue ? Number(ageValue) : null,
+            email: document.getElementById('editEmail').value,
+            roles: Array.from(document.getElementById('editRoles').selectedOptions).map(opt => ({
+                id: Number(opt.value),
+                name: 'ROLE_' + opt.text
+            }))
+        };
+        if(password) {
+            user.password = password;
+        }
+
+        await fetch(url + '/' + id, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(user)
+        });
+
+        bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+        showAllUsers();
+    }
+
+    async function prepareDelete(id) {
+        const response = await fetch('/api/admin/' + id);
+        const user = await response.json();
+                document.getElementById('delId').value = user.id;
+                document.getElementById('delUsername').value = user.username;
+                document.getElementById('delName').value = user.name;
+                document.getElementById('delLastName').value = user.lastName;
+                document.getElementById('delEmail').value = user.email;
+
+                document.getElementById('confirmDelete').onclick = () => confirmDelete(id);
+                new bootstrap.Modal(document.getElementById('deleteModal')).show();
+                }
+
+    async function confirmDelete(id) {
+        await fetch(url + '/' + id, { method: 'DELETE'});
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+        showAllUsers();
+    }
+
+    document.getElementById('newUserForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const ageValue = document.getElementById('newAge').value;
+        const newUser = {
+            username: document.getElementById('newUsername').value,
+            password: document.getElementById('newPassword').value,
+            name: document.getElementById('newName').value,
+            lastName: document.getElementById('newLastName').value,
+            age: ageValue ? Number(ageValue) : null,
+            email: document.getElementById('newEmail').value,
+            roles: Array.from(document.getElementById('newRoles').selectedOptions).map(opt => ({
+                id: Number(opt.value),
+                name: 'ROLE_' + opt.text
+            }))
+        };
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newUser)
+        });
+        if (!response.ok) {
+            alert('Ошибка добавления пользователя')
+            return;
+        }
+
+        e.target.reset();
+        document.getElementById('users-table-tab').click();
+        showAllUsers();
+    };
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadRoles();
+        await showAllUsers();
+    });
+
+</script>
+</body>
+</html>
