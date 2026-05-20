@@ -1,22 +1,28 @@
 package com.project.work.service;
 
+import com.project.work.model.Role;
 import com.project.work.model.User;
+import com.project.work.repository.RoleRepository;
 import com.project.work.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService{
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder){
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository){
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.roleRepository = roleRepository;
     }
 
     @Override
@@ -29,6 +35,18 @@ public class UserServiceImpl implements UserService{
     @Transactional
     public void saveUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        if (user.getRoles() != null) {
+            Set<Role> managedRoles = user.getRoles().stream()
+                    .map(role -> {
+                        Role foundRole = roleRepository.findByName(role.getName());
+                        if(foundRole == null) {
+                            throw new RuntimeException("Роль не найдена в базе данных: " + role.getName());
+                        }
+                    return foundRole;
+                    })
+                    .collect(Collectors.toSet());
+            user.setRoles(managedRoles);
+        }
         userRepository.save(user);
     }
 
@@ -57,7 +75,17 @@ public class UserServiceImpl implements UserService{
 
         if(updatedUser.getRoles() != null) {
             existingUser.getRoles().clear();
-            existingUser.getRoles().addAll(updatedUser.getRoles());
+
+            Set<Role> managedRoles = updatedUser.getRoles().stream()
+                    .map(role ->  {
+                        Role foundRole = roleRepository.findByName(role.getName());
+                        if(foundRole == null) {
+                            throw new RuntimeException("Роль не найдена в базе данных: " + role.getName());
+                        }
+                        return foundRole;
+                    })
+                    .collect(Collectors.toSet());
+            existingUser.getRoles().addAll(managedRoles);
         }
 
         if(updatedUser.getPassword() != null && !updatedUser.getPassword().trim().isEmpty()){

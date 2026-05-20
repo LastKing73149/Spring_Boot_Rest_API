@@ -13,8 +13,22 @@
 </head>
 <body class="bg-light">
 
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1 text-white">
+            Панель администратора
+        </span>
+        <form action="/logout" method="POST" class="m-0">
+            <button type="submit" class="btn btn-outline-secondary text-secondary btn-sm px-3"
+                    style="border-color: #5a3d42; color: #dc3545 !important;">
+                Выйти из системы
+            </button>
+        </form>
+    </div>
+</nav>
+
 <div class="container-fluid mt-4">
-    <h2>Панель администратора</h2>
+    <h2>Управление пользователями</h2>
 
 <ul class="nav nav-tabs" id="adminTabs" role="tablist">
     <li class="nav-item">
@@ -48,26 +62,36 @@
 <div class="tab-pane fade" id="new-user-pane">
     <div class="row justify-content-center">
         <form id="newUserForm" class="col-md-4 text-center">
+
+            <div class="global-error"></div>
+
             <label class="form-label">Никнейм</label>
             <input type="text" id="newUsername" class="form-control" required>
+            <div class="invalid-feedback" id="error-newUsername"></div>
 
             <label class="form-label">Пароль</label>
             <input type="password" id="newPassword" class="form-control" required>
+            <div class="invalid-feedback" id="error-newPassword"></div>
 
             <label class="form-label">Имя</label>
             <input type="text" id="newName" class="form-control">
+            <div class="invalid-feedback" id="error-newName"></div>
 
             <label class="form-label">Фамилия</label>
             <input type="text" id="newLastName" class="form-control">
+            <div class="invalid-feedback" id="error-newLastName"></div>
 
             <label class="form-label">Возраст</label>
             <input type="number" id="newAge" class="form-control">
+            <div class="invalid-feedback" id="error-newAge"></div>
 
             <label class="form-label">Почта</label>
             <input type="email" id="newEmail" class="form-control">
+            <div class="invalid-feedback" id="error-newEmail"></div>
 
             <label class="form-label">Роль</label>
             <select id="newRoles" class="form-select" multiple size="2"></select>
+            <div class="invalid-feedback" id="error-newRoles"></div>
 
             <button type="submit" class="btn btn-success mt-3">Добавить пользователя</button>
                     </form>
@@ -85,6 +109,8 @@
             </div>
             <div class="modal-body d-flex justify-content-center">
                 <div class="col-8 text-center" id="deleteModalBody">
+
+                    <div class="global-error"></div>
 
                 <label class="form-label">ID</label>
                 <input type="text" id="delId" class="form-control bg-light" disabled>
@@ -119,30 +145,40 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body d-flex justify-content-center">
-                <div class="col-8 text-center">
+                <div class="col-8 text-center" id="editFormFields">
+
+                    <div class="global-error"></div>
+
                     <label class="form-label">ID</label>
-                    <input type=text id="editId" class="form-control bg-light" readonly>
+                    <input type="text" id="editId" class="form-control bg-light" readonly>
 
                     <label class="form-label">Никнейм</label>
                     <input type="text" id="editUsername" class="form-control">
+                    <div class="invalid-feedback" id="error-editUsername"></div>
 
                     <label class="form-label">Пароль</label>
                     <input type="password" id="editPassword" class="form-control">
+                    <div class="invalid-feedback" id="error-editPassword"></div>
 
                     <label class="form-label">Имя</label>
                     <input type="text" id="editName" class="form-control">
+                    <div class="invalid-feedback" id="error-editName"></div>
 
                     <label class="form-label">Фамилия</label>
                     <input type="text" id="editLastName" class="form-control">
+                    <div class="invalid-feedback" id="error-editLastName"></div>
 
                     <label class="form-label">Возраст</label>
                     <input type="number" id="editAge" class="form-control">
+                    <div class="invalid-feedback" id="error-editAge"></div>
 
                     <label class="form-label">Почта</label>
                     <input type="email" id="editEmail" class="form-control">
+                    <div class="invalid-feedback" id="error-editEmail"></div>
 
                     <label class="form-label">Роль</label>
                     <select id="editRoles" class="form-select" multiple size="2"></select>
+                    <div class="invalid-feedback" id="error-editRoles"></div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -158,6 +194,22 @@
 <script>
     let url = '/api/admin';
 
+    function clearErrors(containerIdOrElement) {
+        const container = typeof containerIdOrElement === 'string' ? document.getElementById(containerIdOrElement) : containerIdOrElement;
+        if (!container) return;
+        container.querySelectorAll('.form-control, .form-select').forEach(i => i.classList.remove('is-invalid'));
+        container.querySelectorAll('.invalid-feedback').forEach(d => d.innerText = '');
+        const globalErr = container.querySelector('.global-error');
+        if(globalErr) globalErr.innerHTML = '';
+    }
+
+    function showGlobalError(containerElement, message) {
+        const globalErr = containerElement.querySelector('.global-error');
+        if(globalErr) {
+            globalErr.innerHTML = `<div class="alert alert-danger text-start py-2 small" role="alert">${message}</div>`;
+        }
+    }
+
     async function loadRoles() {
         const response = await fetch('/api/admin/roles');
         const roles = await response.json();
@@ -168,7 +220,7 @@
             select.innerHTML = '';
             roles.forEach(role => {
                 let option = document.createElement('option');
-                option.value = role.id;
+                option.value = role.name.replace('ROLE_', '');
                 option.text = role.name.replace('ROLE_', '');
                 select.appendChild(option);
             });
@@ -181,16 +233,16 @@
         const response = await fetch(url);
         const users = await response.json();
         users.forEach(user => {
-            const roles = user.roles.map(r => r.name.replace('ROLE_', '')).join(' ');
+            const roles = user.roles.map(r => typeof r === 'object' ? r.name.replace('ROLE_', '') : r.replace('ROLE_', '')).join(' ');
             let row = `
                     <tr>
                     <td>${user.id}</td>
-                    <td>${user.username}</td>
-                    <td>${user.name}</td>
-                    <td>${user.lastName}</td>
-                    <td>${user.age}</td>
-                    <td>${user.email}</td>
-                    <td>${roles}</td>
+                    <td>${user.username || ''}</td>
+                    <td>${user.name || ''}</td>
+                    <td>${user.lastName || ''}</td>
+                    <td>${user.age || ''}</td>
+                    <td>${user.email || ''}</td>
+                    <td>${roles || ''}</td>
                     <td>
                     <button class = "btn btn-info text-white" onclick="prepareEdit(${user.id})">Редактировать</button>
                     </td>
@@ -204,6 +256,11 @@
 
 
     async function prepareEdit(id) {
+
+        const fieldsContainer = document.getElementById('editFormFields');
+        fieldsContainer.querySelectorAll('.form-control, .form-select').forEach(i => i.classList.remove('is-invalid'));
+        fieldsContainer.querySelectorAll('.invalid-feedback').forEach(d => d.innerText = '');
+
         const response = await fetch(url + '/' + id);
         const user = await response.json();
 
@@ -216,10 +273,19 @@
         document.getElementById('editPassword').value = '';
 
         const select = document.getElementById('editRoles');
-        const userRoleIds = user.roles.map(r => r.id);
+
+        const userRolesCleaned = user.roles.map(role => {
+            if (typeof role === 'object' && role !== null && role.name) {
+                return role.name.replace('ROLE_', '');
+            }
+            if(typeof role === 'string') {
+                return role.replace('ROLE_', '');
+            }
+            return role;
+        });
 
         Array.from(select.options).forEach(option => {
-            option.selected = userRoleIds.includes(parseInt(option.value));
+            option.selected = userRolesCleaned.includes(option.value);
         });
 
         document.getElementById('confirmEdit').onclick = () => confirmEdit(id);
@@ -229,6 +295,11 @@
     async function confirmEdit(id) {
         const password = document.getElementById('editPassword').value;
         const ageValue = document.getElementById('editAge').value;
+
+        const fieldsContainer = document.getElementById('editFormFields');
+        fieldsContainer.querySelectorAll('.form-control, .form-select').forEach(i => i.classList.remove('is-invalid'));
+        fieldsContainer.querySelectorAll('.invalid-feedback').forEach(d => d.innerText = '');
+
         const user = {
             id: id,
             username: document.getElementById('editUsername').value,
@@ -237,22 +308,39 @@
             age: ageValue ? Number(ageValue) : null,
             email: document.getElementById('editEmail').value,
             roles: Array.from(document.getElementById('editRoles').selectedOptions).map(opt => ({
-                id: Number(opt.value),
-                name: 'ROLE_' + opt.text
+                name: "ROLE_" + opt.value
             }))
         };
-        if(password) {
-            user.password = password;
-        }
 
-        await fetch(url + '/' + id, {
+            if(password) {
+                user.password = password;
+            }
+
+        const response = await fetch(url + '/' + id, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(user)
         });
 
-        bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
-        showAllUsers();
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+            showAllUsers();
+        } else if (response.status === 400) {
+            const errorsMap = await response.json();
+            Object.keys(errorsMap).forEach(fieldName => {
+                let inputId = 'edit' + fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
+                let inputElement = document.getElementById(inputId);
+                let errorElement = document.getElementById('error-' + inputId);
+
+                if (inputElement && errorElement) {
+                    inputElement.classList.add('is-invalid');
+                    errorElement.innerText = errorsMap[fieldName];
+                }
+            });
+        } else {
+            showGlobalError(fieldsContainer, "Не удалось обновить данные. Ошибка сервера.");
+        }
+
     }
 
     async function prepareDelete(id) {
@@ -260,22 +348,30 @@
         const user = await response.json();
                 document.getElementById('delId').value = user.id;
                 document.getElementById('delUsername').value = user.username;
-                document.getElementById('delName').value = user.name;
-                document.getElementById('delLastName').value = user.lastName;
-                document.getElementById('delEmail').value = user.email;
+                document.getElementById('delName').value = user.name || '';
+                document.getElementById('delLastName').value = user.lastName || '';
+                document.getElementById('delEmail').value = user.email || '';
 
                 document.getElementById('confirmDelete').onclick = () => confirmDelete(id);
                 new bootstrap.Modal(document.getElementById('deleteModal')).show();
                 }
 
     async function confirmDelete(id) {
-        await fetch(url + '/' + id, { method: 'DELETE'});
-        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
-        showAllUsers();
+        const modalBody = document.getElementById('deleteModalBody');
+        const response = await fetch(url + '/' + id, {method: 'DELETE'});
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+            showAllUsers();
+        } else {
+            showGlobalError(modalBody, "Не удалось удалить пользователя, Недостаточно прав")
+        }
     }
 
-    document.getElementById('newUserForm').onsubmit = async (e) => {
+        document.getElementById('newUserForm').onsubmit = async (e) => {
         e.preventDefault();
+        const form = e.target;
+        clearErrors(form);
+
         const ageValue = document.getElementById('newAge').value;
         const newUser = {
             username: document.getElementById('newUsername').value,
@@ -285,8 +381,7 @@
             age: ageValue ? Number(ageValue) : null,
             email: document.getElementById('newEmail').value,
             roles: Array.from(document.getElementById('newRoles').selectedOptions).map(opt => ({
-                id: Number(opt.value),
-                name: 'ROLE_' + opt.text
+                name: "ROLE_" + opt.value
             }))
         };
 
@@ -295,14 +390,26 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newUser)
         });
-        if (!response.ok) {
-            alert('Ошибка добавления пользователя')
-            return;
-        }
-
-        e.target.reset();
+        if (response.ok) {
+            form.reset();
         document.getElementById('users-table-tab').click();
         showAllUsers();
+    } else if (response.status === 400) {
+        const errorsMap = await response.json();
+
+        Object.keys(errorsMap).forEach(fieldName => {
+            let inputId = 'new' + fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
+            let inputElement = document.getElementById(inputId);
+            let errorElement = document.getElementById('error-' + inputId);
+
+            if (inputElement && errorElement) {
+                inputElement.classList.add('is-invalid');
+                errorElement.innerText = errorsMap[fieldName];
+            }
+        });
+        } else {
+            showGlobalError(form, "Не удалось создать пользователя, проверьте вводимые данные");
+        }
     };
 
     document.addEventListener('DOMContentLoaded', async () => {
